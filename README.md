@@ -146,8 +146,7 @@ Accordingly, choose which driver to download below:
 >Since driver v590 and later on Fedora 44, support for GTX 800/900/10 were dropped and need to use the v580 drivers listed below this one. Please confirm compatibility.
 
 ```bash
-sudo dnf install akmod-nvidia
-sudo dnf install xorg-x11-drv-nvidia-cuda # Required for nvidia-smi and CUDA support
+sudo dnf install cuda-drivers
 ```
 
 ## For Legacy GTX 800/900/10 (After Fedora 44)

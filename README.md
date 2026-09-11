@@ -501,9 +501,6 @@ flatpak override --user --env=GSK_RENDERER=gl --env=VK_LOADER_DRIVERS_DISABLE="*
 flatpak override --user --env=GSK_RENDERER=gl --env=VK_LOADER_DRIVERS_DISABLE="*nvidia*" com.protonvpn.www
 ```
 
-> [!TIP]
-> User Flatpak overrides are saved as plain text files in `~/.local/share/flatpak/overrides/<app-id>`. You can also manage environment variables graphically using [Flatseal](https://flathub.org/apps/com.github.tchx84.Flatseal).
-
 ### Run a Flatpak App on the dGPU
 If you have a Flatpak app or game that you *want* to run on the NVIDIA GPU:
 ```bash

@@ -55,10 +55,12 @@ Please scroll down to the relevant section related to your Fedora installation o
 2.  [Fedora Atomic (Silverblue, Kinoite and Sway)](#installing-nvidia-drivers-on-fedora-atomic)
 
 3.  [LUKS Encrypted Drives](#encrypted-drives)
-   
-4.  [Common Problems](#common-problems)
 
-5.  [Sources](#sources)
+4.  [Hybrid Graphics, Flatpak, and Steam](#hybrid-graphics-flatpak-and-steam)
+   
+5.  [Common Problems](#common-problems)
+
+6.  [Sources](#sources)
 ---
 
 # Installing NVIDIA drivers on Fedora Workstation and it's spins
@@ -463,6 +465,104 @@ Once the command in Step 4 finishes, you can safely reboot. If Secure Boot is en
 
 **Please take this quick survey:** https://forms.gle/J44beNvnPh5x9fHs5
 
+# Hybrid Graphics, Flatpak, and Steam
+
+On laptops with dual GPUs (Intel/AMD iGPU + NVIDIA dGPU), Fedora uses NVIDIA PRIME render offload. The desktop session, browser, and general apps run on the power-efficient integrated GPU, while the NVIDIA dGPU powers down dynamically into `D3cold` (0W power draw) when not in use.
+
+You can route apps and games between the iGPU and dGPU depending on your power and performance needs.
+
+---
+
+## 1. Using switcheroo-control (Default on Fedora)
+
+Fedora includes `switcheroo-control` by default to manage hybrid graphics. You can inspect your detected GPUs:
+
+```bash
+switcherooctl list
+```
+
+* **From the Desktop GUI:** Right-click any application in GNOME or KDE Application Launcher and select **"Run with discrete graphics card"**.
+* **From the Terminal:** Prefix any command with `switcherooctl launch`:
+  ```bash
+  switcherooctl launch <command>
+  ```
+  *(This automatically applies `__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __VK_LAYER_NV_optimus=NVIDIA_only VK_LOADER_DRIVERS_SELECT=*nvidia*`).*
+
+---
+
+## 2. Steam and Gaming on NVIDIA
+
+### Recommended: Keep Steam on iGPU, Launch Games on dGPU
+To maximize battery life and avoid heat while browsing Steam or idling in the background, keep the Steam client running on the iGPU and offload only individual games to the dGPU:
+
+1. Right-click the game in your Steam Library → **Properties...**
+2. In **Launch Options**, enter:
+   ```bash
+   __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia __VK_LAYER_NV_optimus=NVIDIA_only %command%
+   ```
+   *(Or simply: `switcherooctl launch %command%`)*
+
+### Alternative: Run Steam Entirely on dGPU
+If you prefer all Steam games to inherit the NVIDIA GPU without configuring them individually:
+
+* **RPM package:**
+  ```bash
+  switcherooctl launch steam
+  ```
+* **Flatpak package:**
+  ```bash
+  switcherooctl launch flatpak run com.valvesoftware.Steam
+  ```
+
+---
+
+## 3. Flatpak Apps Waking the dGPU (Battery Drain Fix)
+
+Some Flatpak apps (especially GTK 4 apps like Proton VPN) default to Vulkan rendering. Vulkan device enumeration often prioritizes discrete GPUs over integrated GPUs, causing background or tray apps to continuously wake the NVIDIA dGPU and drain battery (~10-15W).
+
+### Keep a Flatpak App on the iGPU
+You can force a Flatpak app to use the OpenGL renderer on the iGPU and ignore NVIDIA Vulkan drivers:
+
+```bash
+flatpak override --user --env=GSK_RENDERER=gl --env=VK_LOADER_DRIVERS_DISABLE="*nvidia*" <app-id>
+```
+
+*Example for Proton VPN:*
+```bash
+flatpak override --user --env=GSK_RENDERER=gl --env=VK_LOADER_DRIVERS_DISABLE="*nvidia*" com.protonvpn.www
+```
+
+> [!TIP]
+> User Flatpak overrides are saved as plain text files in `~/.local/share/flatpak/overrides/<app-id>`. You can also manage environment variables graphically using [Flatseal](https://flathub.org/apps/com.github.tchx84.Flatseal).
+
+### Run a Flatpak App on the dGPU
+If you have a Flatpak app or emulator that you *want* on the NVIDIA GPU:
+```bash
+switcherooctl launch flatpak run <app-id>
+```
+
+---
+
+## 4. Troubleshooting dGPU Power Draw
+
+### Checking GPU Power State Without Waking It
+Running `nvidia-smi` queries the PCIe bus and will **wake up** a sleeping dGPU. To check whether your NVIDIA GPU is truly sleeping without waking it:
+
+```bash
+cat /sys/bus/pci/devices/0000:01:00.0/power_state
+```
+* **`D3cold`**: The GPU is fully asleep (0W / suspended).
+* **`D0`**: The GPU is awake and actively consuming power.
+
+*(Replace `0000:01:00.0` with your NVIDIA PCI bus ID from `lspci | grep -iE 'VGA|3D'` if different).*
+
+### KDE Plasma Wayland: kwin_wayland on dGPU on Startup
+If `kwin_wayland` appears on your NVIDIA dGPU at login, check `/etc/environment` for `KWIN_DRM_DEVICES`. If it contains a secondary GPU device path (e.g. `pci-...-card1`), KWin initializes outputs on both GPUs, keeping the dGPU awake. Ensure `KWIN_DRM_DEVICES` only specifies the primary iGPU card:
+
+```text
+KWIN_DRM_DEVICES="/dev/dri/by-path/pci-<iGPU-bus-id>-card"
+```
+
 # Common Problems
 
 ## NVIDIA-SMI has failed because it couldn’t communicate with the NVIDIA driver. Make sure the latest NVIDIA driver is installed and running
@@ -542,6 +642,7 @@ This should fix the issue with the drivers.
 * Poid-bit [Provided additional steps for encrypted drives]
 * Sarthak Sidhant [Provided additional information for older GPU drivers]
 * kw6423 [Details and fix for packages version mismatch from updates]
+* meetthehorizon [Guide on hybrid graphics, switcheroo-control, Flatpak power management, and Steam]
 
 # Sources
 Configuring RPMFusion:

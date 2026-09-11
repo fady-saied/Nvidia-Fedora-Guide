@@ -509,9 +509,8 @@ flatpak run --env=__NV_PRIME_RENDER_OFFLOAD=1 --env=__GLX_VENDOR_LIBRARY_NAME=nv
 
 ---
 
-## 3. Troubleshooting dGPU Power Draw
+## 3. Checking GPU Power State Without Waking It
 
-### Checking GPU Power State Without Waking It
 Running `nvidia-smi` queries the PCIe bus and will **wake up** a sleeping dGPU. To check whether your NVIDIA GPU is truly sleeping without waking it:
 
 ```bash
@@ -521,13 +520,6 @@ cat /sys/bus/pci/devices/0000:01:00.0/power_state
 * **`D0`**: The GPU is awake and actively consuming power.
 
 *(Replace `0000:01:00.0` with your NVIDIA PCI bus ID from `lspci | grep -iE 'VGA|3D'` if different).*
-
-### KDE Plasma Wayland: kwin_wayland on dGPU on Startup
-If `kwin_wayland` appears on your NVIDIA dGPU at login, check `/etc/environment` for `KWIN_DRM_DEVICES`. If it contains a secondary GPU device path (e.g. `pci-...-card1`), KWin initializes outputs on both GPUs, keeping the dGPU awake. Ensure `KWIN_DRM_DEVICES` only specifies the primary iGPU card:
-
-```text
-KWIN_DRM_DEVICES="/dev/dri/by-path/pci-<iGPU-bus-id>-card"
-```
 
 # Common Problems
 

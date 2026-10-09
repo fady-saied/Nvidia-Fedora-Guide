@@ -16,11 +16,11 @@ mokutil --sb-state
 If enabled, you will need to follow some extra (but simple) steps. Don't disable Secure Boot if it was already enabled to improve your security. However, if you followed the steps and the driver modules failed to load, disable secure boot to fix the problem.
 
 > [!NOTE]
-> If you are using a hybrid laptop and connect an external monitor to the Nvidia GPU (HDMI), you will experience severe lag on the external display with the Nvidia drivers. You can either use the MUX switch to disable the iGPU or follow the following guide for a workaround after you install the drivers: https://crstl.me/blog/solving-low-fps-on-external-monitor-linux/
+> If you are using a hybrid laptop and connect an external monitor to the Nvidia GPU (HDMI), you might experience severe lag on the external display with the Nvidia drivers. You can either use the MUX switch to disable the iGPU or follow the following guide for a workaround after you install the drivers: https://crstl.me/blog/solving-low-fps-on-external-monitor-linux/
 
 All you need to do is follow the guide and *hopefully* everything works smoothly! 
 
-Please check if your Desktop Environment is compatible with the Nvidia drivers since there are more steps needed for some that may not be listed here. This is not a problem for KDE, Gnome, Sway and Cosmic but may be a problem for some of the spins. If you find any, please create an issue with the details.
+This guide was tested for Gnome, KDE, Cosmic and Sway. Other Desktop Environments (DEs) may require additional steps. If you found any for specific DEs please create an issue with the details.
 
 You will mostly need to just copy and paste commands into the terminal. But, make sure to read everything carefully!
 
@@ -28,7 +28,7 @@ If you find any mistake or want to add some missing information, create a pull r
 
 At the end you will find a quick survey, taking it will help me maintain this guide especially if you faced a failure in the installation process. Thanks!
 
-Consult the official documentation (Sources listed below) if more information is needed.
+Consult the official documentation if more information is needed. Sources listed below.
 
 
 ## Identify your system

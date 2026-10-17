@@ -485,12 +485,22 @@ To maximize battery life and avoid heat while browsing Steam or idling in the ba
 
 ---
 
-## 2. Flatpak Apps Waking the dGPU (Battery Drain Fix)
+## 2. GTK 4 Apps Waking the dGPU (Slow Launch & Battery Drain)
 
-Some Flatpak apps (especially GTK 4 apps like Proton VPN) default to Vulkan rendering. Vulkan device enumeration often prioritizes discrete GPUs over integrated GPUs, causing background or tray apps to continuously wake the NVIDIA dGPU and drain battery (~10-15W).
+GTK 4 apps (Files, Text Editor, Settings, and Flatpak apps like Proton VPN) default to Vulkan rendering. Initializing Vulkan loads the NVIDIA driver, which wakes the dGPU. This delays the first launch of an app by a few seconds, and background or tray apps can keep the dGPU awake and drain battery (~10-15W).
+
+### Keep All GTK 4 Apps on the iGPU
+Switch GTK 4 to the OpenGL renderer for your whole session (native and Flatpak apps):
+
+```bash
+mkdir -p ~/.config/environment.d
+echo "GSK_RENDERER=gl" > ~/.config/environment.d/gtk.conf
+```
+
+Log out and log back in to apply. Check the result with [Checking GPU Power State](#3-checking-gpu-power-state-without-waking-it). To revert, delete `~/.config/environment.d/gtk.conf`.
 
 ### Keep a Flatpak App on the iGPU
-You can force a Flatpak app to use the OpenGL renderer on the iGPU and ignore NVIDIA Vulkan drivers:
+To apply this to a single Flatpak app instead, and also hide NVIDIA Vulkan drivers from it:
 
 ```bash
 flatpak override --user --env=GSK_RENDERER=gl --env=VK_LOADER_DRIVERS_DISABLE="*nvidia*" <app-id>
@@ -601,6 +611,7 @@ This should fix the issue with the drivers.
 * Sarthak Sidhant [Provided additional information for older GPU drivers]
 * kw6423 [Details and fix for packages version mismatch from updates]
 * meetthehorizon [Guide on hybrid graphics, Flatpak power management, and Steam]
+* vishwajitsarnobat [System-wide GTK 4 renderer fix for hybrid graphics]
 
 # Sources
 Configuring RPMFusion:
